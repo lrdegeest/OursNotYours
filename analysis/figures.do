@@ -7,6 +7,8 @@
 *===============================================================================
 use data/ar_er.dta, clear
 
+set scheme lean1
+
 encode type, gen(type_n)
 drop type
 rename type_n type
@@ -88,7 +90,7 @@ foreach k in `types' {
 			ytitle("Smoothed density") xtitle(`ax') ///
 			subtitle("{bf:`T'-No punishment}") ///
 			xlabel(0(10)50) ylabel(0(0.02)0.1) ///
-			xline(10, lc(`xlinecolor') lp(dot)) ///
+			xline(4.5, lc(`xlinecolor') lp(dot)) ///
 			xline(25, lc(`xlinecolor') lp(dash)) ///
 			xline(40, lc(`xlinecolor') lp(solid)) ///
 			legend(ring(0) pos(11) col(2) order(1 "Assigned" 2 "Earned") region(color("white%0"))) ///
@@ -99,7 +101,7 @@ foreach k in `types' {
 			legend(ring(0) pos(11) col(2) order(1 "Assigned" 2 "Earned") region(color("white%0"))) ///
 			subtitle("{bf:`T'-Punishment}") ///
 			xlabel(0(10)50) ylabel(0(0.02)0.1) ///
-			xline(10, lc(`xlinecolor') lp(dot)) ///
+			xline(4.5, lc(`xlinecolor') lp(dot)) ///
 			xline(25, lc(`xlinecolor') lp(dash)) ///
 			xline(40, lc(`xlinecolor') lp(solid)) ///
 			name(pun`k', replace) nodraw
@@ -137,6 +139,22 @@ cibar deterrence, over1(treatment) ///
 grc1leg all_p pos_p deter, cols(3) legendfrom(all_p) name(p, replace)
 graph display p, xsize(5.0) ysize(2) 
 restore
+
+preserve
+collapse (mean) points_received_loss=points_received_loss, by(period treatment type)
+levelsof type, local(types)
+foreach i in `types' {
+	tw	(connected points_received_loss period if treatment == 1 & type == `i', msymbol(o) lcolor(blue*0.75) mcolor(blue)) /// 
+		(connected points_received_loss period if treatment == 2 & type == `i', msymbol(o) lcolor(orange*0.75) mcolor(orange)), /// 
+					ytitle("Average punishment received") xtitle("Period") xlabel(1(2)15)  ///
+					legend(order(1 "Assigned" 2 "Earned" ) cols(2)) ///
+					scheme(lean1) ///
+					subtitle("{bf:`T'-`t'}") ///
+					legend(ring(0) position(7) size(small)) name(p`i', replace) nodraw
+}
+grc1leg p1 p2, name(avg_pun_time, replace) 
+restore	
+
 *===============================================================================
 
 

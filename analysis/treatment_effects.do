@@ -51,17 +51,17 @@ esttab m11 m12 m21 m22 using earned_assigned_ate.tex, replace ///
 	addnotes("Standard errors clustered at the group level.") 	
 	
 
-* t-test insider harvest == 25 (social optimum)
+* signrank test insider harvest == 25 (social optimum)
 preserve
 keep if type == 1 
 collapse (mean) invest, by(treatment punishment uniquegroup)
-levelsof treatment, local(T)
-levelsof punishment, local(P)
+levelsof treatment, local(T) // 1=Assigned, 2=Earned
+levelsof punishment, local(P) // 1=NoPun, 2=Pun
 foreach t in `T' {
 	foreach p in `P' {
 		di "Rights == `t' and Punishment == `p'"
-		qui ttest invest == 25 if treatment == `t' & punishment == `p'
-		di as text "Test statistic = " as result %9.2f r(t) 
+		qui signrank invest = 25 if treatment == `t' & punishment == `p'
+		di as text "Test statistic = " as result %9.2f r(z) 
 		di as text "p-value = " as result %9.2f r(p)
 		di ""
 	}
