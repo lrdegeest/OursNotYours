@@ -23,6 +23,18 @@ rename treatment_full_n treatment_full
 xtset uniquesubject period
 *===============================================================================
 
+
+*===============================================================================
+* total profits to subjects
+** conversion rate was 1 USD = 0.01 ED
+** show-up fee was 7 USD
+preserve
+keep if period == 15
+gen convertedprofit = 0.01*totalprofit + 7
+tabstat convertedprofit, stat(mean sd) f(%12.2fc)
+tabstat convertedprofit, by(type) stat(mean sd) f(%12.2fc)
+restore
+
 *===============================================================================
 * HARVEST/POACHING
 * treatment effect: assigned vs earned
@@ -51,7 +63,7 @@ esttab m11 m12 m21 m22 using earned_assigned_ate.tex, replace ///
 	addnotes("Standard errors clustered at the group level.") 	
 	
 
-* signrank test insider harvest == 25 (social optimum)
+* ttest test insider harvest == 25 (social optimum)
 preserve
 keep if type == 1 
 collapse (mean) invest, by(treatment punishment uniquegroup)
@@ -60,8 +72,8 @@ levelsof punishment, local(P) // 1=NoPun, 2=Pun
 foreach t in `T' {
 	foreach p in `P' {
 		di "Rights == `t' and Punishment == `p'"
-		qui signrank invest = 25 if treatment == `t' & punishment == `p'
-		di as text "Test statistic = " as result %9.2f r(z) 
+		qui ttest invest = 25 if treatment == `t' & punishment == `p'
+		di as text "Test statistic = " as result %9.2f r(t) 
 		di as text "p-value = " as result %9.2f r(p)
 		di ""
 	}
@@ -69,7 +81,6 @@ foreach t in `T' {
 restore
 
 * overall punishment affect (within treatment)
-
 ** harvests/poaching
 levelsof type, local(T)
 levelsof treatment, local(P)
@@ -120,6 +131,22 @@ esttab m11 m12 m21 m22 using earned_assigned_profit_ate.tex, replace ///
 	drop(lns1_1_1:_cons lns2_1_1:_cons lnsig_e:_cons 1.treatment) ///
 	varlabels(_cons Constant 2.treatment "Earned") ///
 	addnotes("Standard errors clustered at the group level.")
+	
+	
+** payoffs	
+levelsof punishment, local(T)
+levelsof treatment, local(P)
+foreach t in `T' {
+	foreach p in `P' {
+		preserve
+		keep if punishment == `t' & treatment == `p'
+		qui eststo m`t'`p': mixed profit i.type || uniquegroup: || uniquesubject:, mle cluster(uniquegroup)
+		di "punishment == `t' and treatment == `p'"
+		test 2.type
+		di ""
+		restore
+	}
+}
 *===============================================================================
 
 
