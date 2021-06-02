@@ -160,10 +160,48 @@ restore
 
 *===============================================================================
 * EFFORT
-* Figure A1
+* Figure A1: average and distribution of effort
+
+** average effort
 cibar score, ///
 	over1(treatment) over2(punishment) ///
 	ciopts(lcolor(black) lwidth(0.5)) ///
 	barcol(blue*0.75 orange*0.75) ///
-	graphopts(ylabel(0(25)100) ytitle("Average slider score") legend(pos(2) ring(0))) 
+	graphopts(	ylabel(0(25)100) ///
+				ytitle("Average slider score") subtitle("{bf:A}", ring(0) pos(10) size(large)) /// 
+				legend(pos(2) ring(0) cols(2)) ///
+				name(avg_score, replace) nodraw) 
+	
+	
+** distribution of effort
+preserve
+gen zero_base = 0
+levelsof treatment, local(t)
+levelsof punishment, local(pun)
+quietly {
+	foreach i in `t' {
+		foreach j in `pun' {
+			capture drop x`i'`j' dens`i'`j'
+			kdensity score if treatment == `i' & punishment == `j', generate(x`i'`j' dens`i'`j') nodraw
+		}
+	}
+}
+twoway	(rarea dens11 zero_base x11, color("blue%50")) ///
+		(rarea dens21 zero_base x21, color("orange%50")), ///
+		ytitle("Smoothed density") xtitle("Slider score") ///
+		subtitle("{bf:B}", ring(0) pos(10) size(large)) title("No punishment") ///
+		legend(ring(0) pos(11) col(2) order(1 "Assigned" 2 "Earned") region(color("white%0"))) ///
+		name(no_pun, replace) nodraw			
+twoway	(rarea dens12 zero_base x12, color("blue%50")) ///
+		(rarea dens22 zero_base x22, color("orange%50")), ///
+		ytitle("Smoothed density") xtitle("Slider score") ///
+		subtitle("{bf:C}", ring(0) pos(10) size(large)) title("Punishment") ///
+		legend(ring(0) pos(11) col(2) order(1 "Assigned" 2 "Earned") region(color("white%0"))) ///
+		name(pun, replace) nodraw
+drop zero_base x* dens*
+restore	  
+
+** combine
+grc1leg no_pun pun, name(dist_score, replace) cols(1)
+grc1leg avg_score dist_score, legendfrom(avg_score)
 *===============================================================================

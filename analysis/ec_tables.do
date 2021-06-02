@@ -59,18 +59,18 @@ foreach t in `types' {
 }
 * AMEs
 esttab ame_em1 ame_im1 ame_em2 ame_im2 using punishment_ame.tex, replace ///
-	cells(b(star fmt(3)) se(par fmt(2))) star(* 0.10 ** 0.05 *** 0.01) ///
+	cells(b(star fmt(3)) se(par fmt(2))) star(* 0.05 ** 0.01 *** 0.001) ///
 	numbers nodepvars booktabs ///
 	mtitles("P(sanction)" "E[sanction]" "P(sanction)" "E[sanction]") ///
 	mgroups("Insiders" "Outsiders", pattern(1 0 1 0) prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span})) ///
 	label legend  ///
 	collabels(none) ///
-	drop(1.treatment) ///
-	varlabels(2.treatment "Earned" self_invest "Own harvest" target_invest "Target harvest/poaching" lag_total_sanctions "Sanctions in t-1")  	
+	order(target_invest self_invest lag_total_sanctions) ///
+	varlabels(self_invest "Own harvest" target_invest "Target harvest/poaching" lag_total_sanctions "Sanctions in t-1")  	
 
 * COEFFICIENTS
 esttab em1 im1 em2 im2 using punishment_ate_hurdle.tex, replace ///
-	cells(b(star fmt(3)) se(par fmt(2))) star(* 0.10 ** 0.05 *** 0.01) ///
+	cells(b(star fmt(3)) se(par fmt(2))) star(* 0.05 ** 0.01 *** 0.001) ///
 	numbers nodepvars booktabs ///
 	mtitles("P(sanction)" "E[sanction]" "P(sanction)" "E[sanction]") ///
 	mgroups("Insiders" "Outsiders", pattern(1 0 1 0) prefix(\multicolumn{@span}{c}{) suffix(}) span erepeat(\cmidrule(lr){@span})) ///
