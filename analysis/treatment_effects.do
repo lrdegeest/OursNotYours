@@ -232,3 +232,16 @@ esttab m11 m12 m21 m22 using profit_ate_within.tex, replace ///
 	varlabels(_cons Constant 2.punishment "Punishment") ///
 	addnotes("Standard errors clustered at the group level.") 	
 *===============================================================================
+
+*===============================================================================
+* EFFORT TASK
+levelsof punishment, local(P)
+foreach p in `P' {
+	preserve
+	keep if punishment == `p' & period == 1
+	qui eststo m`t'`p': reg score i.treatment
+	di "Punishment == `p'"
+	test 2.treatment
+	restore
+}
+*===============================================================================
