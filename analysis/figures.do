@@ -1,6 +1,6 @@
 *===============================================================================
 * harvest/poaching, punishment and effort figures
-* produces Figures 2, 3 and A1 in manuscript
+* produces Figures 2, 3 and A1-A2 in the manuscript
 * @author: lrdegeest
 *===============================================================================
 
@@ -160,9 +160,56 @@ restore
 
 *===============================================================================
 * EFFORT
-* Figure A1: average and distribution of effort
 
-** average effort
+* Figure A1: distribution of effort by treatment-ranking
+
+preserve
+keep if period == 1
+egen rank_score = rank(score), by(uniquegroup)
+gen top4 = cond(rank_score > 2, 1, 2)
+keep treatment punishment uniquegroup uniquesubject score rank_score  top4 type
+cibar score, ///
+	over1(top4) over2(treatment) ///
+	ciopts(lcolor(black) lwidth(0.5)) ///
+	barcol(purple*0.75 green*0.75) ///
+		graphopts(	ylabel(0(25)100) ///
+				ytitle("Average slider score") subtitle("{bf:A}", ring(0) pos(10) size(large)) /// 
+				legend(pos(2) ring(0) cols(2) order(1 "Top 4 Group Members" 2 "Bottom 2 Group Members")) ///
+				name(avg_score_top4, replace) nodraw) 
+levelsof treatment, local(t)
+levelsof top4, local(T)
+gen zero_base = 0
+quietly {
+	foreach i in `t' { // treatment: 1 = Assigned, 2 = Earned
+		foreach j in `T' { // top4: 1 = yes, 2 = no
+			capture drop x`i'`j' dens`i'`j'
+			kdensity score if treatment == `i' & top4 == `j', generate(x`i'`j' dens`i'`j') nodraw
+		}
+	}
+}
+twoway	(rarea dens11 zero_base x11, color("purple%50")) /// insider
+		(rarea dens12 zero_base x12, color("green%50")), /// outsider
+		ytitle("Smoothed density") xtitle("Slider score") ///
+		subtitle("{bf:B}", ring(0) pos(10) size(large))  title("Assigned") ///
+		legend(ring(0) pos(11) col(2) order(1 "Top 4" 2 "Bottom 2") region(color("white%0"))) ///
+		name(assigned_top4, replace) nodraw			
+twoway	(rarea dens21 zero_base x21, color("purple%50")) ///
+		(rarea dens22 zero_base x22, color("green%50")), ///
+		ytitle("Smoothed density") xtitle("Slider score") ///
+		subtitle("{bf:C}", ring(0) pos(10) size(large))  title("Earned") ///
+		legend(ring(0) pos(11) col(2) order(1 "Top 4" 2 "Bottom 2") region(color("white%0"))) ///
+		name(earned_top4, replace) nodraw
+drop zero_base x* dens*
+restore
+
+** combine
+grc1leg assigned_top4 earned_top4, name(dist_score_top4, replace) cols(1)
+grc1leg avg_score_top4 dist_score_top4, legendfrom(avg_score_top4)	
+
+
+* Figure A2: average and distribution of effort
+
+** average effort by treatment/punishment
 cibar score, ///
 	over1(treatment) over2(punishment) ///
 	ciopts(lcolor(black) lwidth(0.5)) ///
@@ -171,9 +218,9 @@ cibar score, ///
 				ytitle("Average slider score") subtitle("{bf:A}", ring(0) pos(10) size(large)) /// 
 				legend(pos(2) ring(0) cols(2)) ///
 				name(avg_score, replace) nodraw) 
-	
-	
-** distribution of effort
+				
+					
+** distribution of effort by treatment/punishment
 preserve
 gen zero_base = 0
 levelsof treatment, local(t)
@@ -205,3 +252,4 @@ restore
 grc1leg no_pun pun, name(dist_score, replace) cols(1)
 grc1leg avg_score dist_score, legendfrom(avg_score)
 *===============================================================================
+

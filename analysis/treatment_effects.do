@@ -235,6 +235,8 @@ esttab m11 m12 m21 m22 using profit_ate_within.tex, replace ///
 
 *===============================================================================
 * EFFORT TASK
+
+** by treatment/punishment
 levelsof punishment, local(P)
 foreach p in `P' {
 	preserve
@@ -244,4 +246,19 @@ foreach p in `P' {
 	test 2.treatment
 	restore
 }
+
+** by ranking/treatment 
+levelsof treatment, local(T)
+preserve
+keep if period == 1
+egen rank_score = rank(score), by(uniquegroup)
+gen top4 = cond(rank_score > 2, 1, 2)
+table top4, c(mean score) by(treatment)
+foreach t in `T' {
+	qui eststo m`t'`p': reg score i.top4 if treatment == `t'
+	di "Treatment == `t'"
+	test 2.top4
+}
+restore
 *===============================================================================
+
